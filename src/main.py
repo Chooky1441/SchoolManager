@@ -6,7 +6,7 @@ class ClassManager:
     def __init__(self):
         self._root = tk.Tk()
         self._root.minsize(700, 350)
-        self._root.title('School Buddy')
+        self._root.title('School Manager')
         
         self._root.bind('<Control-q>', self._quit)
         
