@@ -1,9 +1,8 @@
 import tkinter as tk
 import tkinter.messagebox as tkmsg
 from tkinter import ttk
-import utils
-import assignment
 from scroll_frame import ScrollingFrame
+import assignment, root_tracker, utils
                
 class Course:
     
@@ -86,17 +85,23 @@ class Course:
     def add_assignment(self, a: assignment.Assignemnt) -> None:
         """Adds the given assignment to the course"""
         self.assignments.append(a)
-
+        
+    def remove_assignment(self, a: assignment.Assignemnt) -> None:
+        """Removes the given assignment from the course"""
+        self.assignments.remove(a)
+        
 class TkCourse:
-    def __init__(self, schedule, tkschedule):
+    def __init__(self, schedule, tkschedule, root_tracker: root_tracker.Root_Tracker):
         self._schedule = schedule
         self._tkschedule = tkschedule
+        self._root_tracker = root_tracker
+        
         self._root = tk.Tk()
-        ttk.Style(self._root).theme_use('clam')
+        ttk.Style(self._root).theme_use('vista')
         self._root.minsize(300, 300)
         self._root.title('Add A Course')
         self._root.protocol('WM_DELETE_WINDOW', self.destroy)
-        self._tkschedule.add_root(self._root)
+        self._root_tracker.add_root(self._root)
         self._root.columnconfigure(0, weight = 1)
         self._root.rowconfigure(2, weight = 1)
             
@@ -228,5 +233,5 @@ class TkCourse:
                     
     def destroy(self) -> None:
         """destoys the root window and removes it from the tkschedule list"""
-        self._tkschedule.remove_root(self._root)
+        self._root_tracker.remove_root(self._root)
         self._root.destroy()                    

@@ -1,7 +1,6 @@
 import tkinter as tk
 import tkinter.messagebox as tkmsg
-import utils
-import schedule
+import schedule, utils
 
 class TkCreateSchedule:
     COLSPAN = 2

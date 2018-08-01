@@ -1,9 +1,14 @@
+#cd Desktop/Python/workspace/school_manager
+#git add .
+#git commit -m ""
+#git push origin master
+
 import tkinter as tk
 from tkinter import ttk
 
-def create_label(frame, text, row = 0, column = 0, colspan = 1, padx = 5, pady = 5):
+def create_label(frame, text, row = 0, column = 0, colspan = 1, padx = 5, pady = 5, sticky = tk.NSEW):
     lab = tk.Label(frame, text = text)
-    lab.grid(row = row, column = column, columnspan = colspan, padx = padx, pady = pady, sticky = tk.NSEW)
+    lab.grid(row = row, column = column, columnspan = colspan, padx = padx, pady = pady, sticky = sticky)
     return lab
 
 def create_button(frame, text, command, row = 0, column = 0, sticky = tk.NSEW, padx = 5, pady = 5, colspan = 1) -> ttk.Button:
@@ -35,7 +40,7 @@ def create_title(frame, text, colspan = 0, padx = 5, pady = 5, pack = False) -> 
     
 def create_separator(frame, row, col, colspan, padx = 5, pady = 5) -> ttk.Separator:
     sep = ttk.Separator(frame, orient = tk.HORIZONTAL)
-    sep.grid(row = row, column = col, columnspan = colspan, sticky = tk.NSEW, padx = 5, pady = 5)
+    sep.grid(row = row, column = col, columnspan = colspan, sticky = tk.NSEW, padx = padx, pady = pady)
     return sep
 
 def raise_frame(frame) -> None:

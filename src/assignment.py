@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as tkmsg
-import utils
+import root_tracker, utils
 
 class Assignemnt:
     def __init__(self, name: str, points: float, points_total: float, category = 'General'):
@@ -17,17 +17,18 @@ class TkAssignment:
     
     COLSPAN = 2
     
-    def __init__(self, c: 'Course', tkschedule):
+    def __init__(self, c: 'Course', course_widget: 'Course Widget', root_tracker: root_tracker.Root_Tracker):
         self._c = c
-        self._tkschedule = tkschedule
+        self._course_widget = course_widget
+        self._root_tracker = root_tracker
         
         self._root = tk.Tk()
         self._root.minsize(300, 300)
         self._root.title('Add An Assignment')
         self._root.protocol('WM_DELETE_WINDOW', self.destroy)
-        self._tkschedule.add_root(self._root)
+        self._root_tracker.add_root(self._root)
         
-        ttk.Style(self._root).theme_use('clam')
+        ttk.Style(self._root).theme_use('vista')
         utils.configure_frame(self._root, rowspan = 6, colspan = self.COLSPAN)
         
         utils.create_title(self._root, 'Add An Assignment', self.COLSPAN)
@@ -69,10 +70,10 @@ class TkAssignment:
                         points = None
                     else:
                         points = float(self._points.get())
-                    self._tkschedule.add_tkassignment(self._c, Assignemnt(self._name.get(), points, float(self._points_total.get()), self._cat.get()))
+                    self._course_widget.add_tkassignment(Assignemnt(self._name.get(), points, float(self._points_total.get()), self._cat.get()))
                     self.destroy()
         
     def destroy(self) -> None:
         """destroys the root window and removes it from the tkschedule list"""
-        self._tkschedule.remove_root(self._root)
+        self._root_tracker.remove_root(self._root)
         self._root.destroy() 

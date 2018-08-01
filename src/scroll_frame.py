@@ -33,12 +33,13 @@ class ScrollingFrame:
         self.update_canvas()
     
     def update_canvas(self, event = None) -> None:
+        #print('CANVAS')
         self.frame.update_idletasks()
         h = self._parent_frame.winfo_height() - self._height_border
         if h < self.frame.winfo_reqheight():
             h = self.frame.winfo_reqheight()
         
-        w = self._parent_frame.winfo_width()
+        w = self._parent_frame.winfo_width() - 20
         if w < self.frame.winfo_reqwidth():
             w = self.frame.winfo_reqwidth()
 
@@ -46,7 +47,7 @@ class ScrollingFrame:
         
     def update_frame(self, event = None) -> None:
         delta_w, delta_h = abs(self._previous_width - self.frame.winfo_width()), abs(self._previous_height - self.frame.winfo_height())
-        if delta_w > 30 or delta_h > 30: 
+        if delta_w > 30 or delta_h > 30 or event == 'force': 
             self._previous_width = self.frame.winfo_width()
             self._previous_height = self.frame.winfo_height()
             self._canvas.configure(scrollregion = self._canvas.bbox(tk.ALL), width = self.frame.winfo_width(), height = self.frame.winfo_height())

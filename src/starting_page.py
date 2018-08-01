@@ -2,11 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 import tkinter.messagebox as tkmsg
-import create_schedule
-import utils
-import schedule
-from pathlib import Path
-import os
+import create_schedule, pathlib, schedule, utils
+
 
 class StartingPage:
     
@@ -14,7 +11,7 @@ class StartingPage:
         self._root = root
         self._root_frame = root_frame
         
-        ttk.Style().theme_use('clam')
+        ttk.Style().theme_use('vista')
         
         self._frame = tk.Frame(self._root_frame)
         self._frame.grid(row = 0, column = 0, sticky = tk.NSEW)
@@ -59,7 +56,7 @@ class StartingPage:
         else: 
             file.close()
             recent = open('schedules/recent.txt', 'w')
-            recent.write(Path(schedule_dir).parts[-1].replace('.track', ''))
+            recent.write(pathlib.Path(schedule_dir).parts[-1].replace('.track', ''))
             recent.close()
             schedule.open_schedule(self._root, self._root_frame, open(schedule_dir), self)
             
