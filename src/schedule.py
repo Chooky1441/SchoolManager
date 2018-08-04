@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as tkmsg
 from scroll_frame import ScrollingFrame
-import course, course_widget, json, root_tracker, utils
+import course, course_widget, json, pathlib, root_tracker, utils
 
 class Schedule:
     
@@ -40,7 +40,7 @@ class Schedule:
 def open_schedule(root, root_frame, open_file, start_page) -> None:
     """opens a schedule from a json file"""
     s = get_schedule_dict(open_file)
-    open('schedules/recent.txt', 'w').write(s['name'] + '.json')
+    open(pathlib.Path('schedules/recent.txt'), 'w').write(s['name'] + '.json')
     TkSchedule(root, root_frame, Schedule(s['name'], int(s['units']), float(s['gpa']), s['courses']), start_page)
     
 def get_schedule_dict(open_file) -> dict:
@@ -52,7 +52,7 @@ def get_schedule_dict(open_file) -> dict:
         
 def save_schedule(schedule: Schedule) -> None:
     """saves the schedule as a json file"""
-    file = open(f'schedules/{schedule.name}.json', 'w')
+    file = open(pathlib.Path(f'schedules/{schedule.name}.json'), 'w')
     with file as f:
         json.dump(schedule.get_dict(), f)
     file.close()
@@ -94,40 +94,42 @@ class TkSchedule:
         self._root.bind('<Control-q>', self._quit)
         
         # initialize status bar (top)
-        self._frame = tk.Frame(self._root_frame, bg = 'dark grey')
+        self._frame = tk.Frame(self._root_frame)
         self._frame.grid(row = 0, column = 0, sticky = tk.NSEW)
         self._frame.rowconfigure(2, weight = 1)
         utils.configure_frame(self._frame, colspan = 4)
         
-        self._status_frame = tk.Frame(self._frame, bg = 'dark grey')
+        self._status_color = 'dark grey'
+        self._status_frame = tk.Frame(self._frame, bg = self._status_color)
         self._status_frame.grid(row = 0, column = 0, columnspan = 4, sticky = tk.NSEW)
         utils.configure_frame(self._status_frame, colspan = 5)
         
-        self._project_name = tk.Label(self._status_frame, bg = 'dark grey', text = self._schedule.name)
+        self._project_name = tk.Label(self._status_frame, bg = self._status_color, text = self._schedule.name)
         self._project_name.grid()
-        self._total_units = tk.Label(self._status_frame, bg = 'dark grey', text = f'Total Units Completed: {self._schedule.units}')
+        self._total_units = tk.Label(self._status_frame, bg = self._status_color, text = f'Total Units Completed: {self._schedule.units}')
         self._total_units.grid(row = 0, column = 1)
-        self._enrolled_units = tk.Label(self._status_frame, bg = 'dark grey', text = f'Units Enrolled In: {sum([c.units for c in self._schedule.courses])}')
+        self._enrolled_units = tk.Label(self._status_frame, bg = self._status_color, text = f'Units Enrolled In: {sum([c.units for c in self._schedule.courses])}')
         self._enrolled_units.grid(row = 0, column = 2)
-        self._gpa = tk.Label(self._status_frame, bg = 'dark grey', text = f'GPA: {self._schedule.gpa}')
+        self._gpa = tk.Label(self._status_frame, bg = self._status_color, text = f'GPA: {self._schedule.gpa}')
         self._gpa.grid(row = 0, column = 3)
-        self._total_courses = tk.Label(self._status_frame, bg = 'dark grey', text = f'Total Courses: {len(self._schedule)}')
+        self._total_courses = tk.Label(self._status_frame, bg = self._status_color, text = f'Total Courses: {len(self._schedule)}')
         self._total_courses.grid(row = 0, column = 4)
         
         # initialize course labels
-        self._info_frame = tk.Frame(self._frame)
+        self._info_color = 'light grey'
+        self._info_frame = tk.Frame(self._frame, padx = 16, bg = self._status_color)
         self._info_frame.grid(row = 1, column = 0, columnspan = 4, sticky = tk.NSEW)
         
         for i in range(4):
             self._info_frame.columnconfigure(i, weight = 1, uniform = 'info')
         
-        tk.Label(self._info_frame, text = '{:^20}'.format('Course'), bg = 'dark grey', bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 0, sticky = tk.EW)
-        tk.Label(self._info_frame, text = '{:^20}'.format('Units'), bg = 'dark grey', bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 1, sticky = tk.EW)
-        tk.Label(self._info_frame, text = '{:^20}'.format('Total Assignments'), bg = 'dark grey', bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 2, sticky = tk.EW)
-        tk.Label(self._info_frame, text = '{:^20}'.format('Grade'), bg = 'dark grey', bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 3, sticky = tk.EW)
+        tk.Label(self._info_frame, text = '{:^25}'.format('Course'), bg = self._info_color, bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 0, sticky = tk.EW)
+        tk.Label(self._info_frame, text = '{:^25}'.format('Units'), bg = self._info_color, bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 1, sticky = tk.EW)
+        tk.Label(self._info_frame, text = '{:^25}'.format('Total Assignments'), bg = self._info_color, bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 2, sticky = tk.EW)
+        tk.Label(self._info_frame, text = '{:^25}'.format('Grade'), bg = self._info_color, bd = 1, relief = tk.SUNKEN, padx = 8, pady = 5).grid(row = 3, column = 3, sticky = tk.EW)
         
         # initialize courses frame
-        self._course_scroll = ScrollingFrame(self._frame, 2, 0, 4, height_border = 91)
+        self._course_scroll = ScrollingFrame(self._frame, 2, 1, 4, height_border = 91, w_cutoff = 30, h_cuttoff = 30, scroll_size = 15)
         self._courses_frame = self._course_scroll.frame
         utils.configure_frame(self._courses_frame, colspan = 1)
         
@@ -196,7 +198,7 @@ class TkSchedule:
             self.add_tkcourse(c)
         
     def _create_tkcourse(self) -> None:
-        course.TkCourse(self._schedule, self, self._root_tracker)
+        course.NewTkCourse(self._schedule, self, self._root_tracker)
 
  
 

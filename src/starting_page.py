@@ -11,7 +11,8 @@ class StartingPage:
         self._root = root
         self._root_frame = root_frame
         
-        ttk.Style().theme_use('vista')
+        utils.init_theme()
+                
         
         self._frame = tk.Frame(self._root_frame)
         self._frame.grid(row = 0, column = 0, sticky = tk.NSEW)
@@ -48,14 +49,14 @@ class StartingPage:
         schedule_dir = None
         file = None
         try:
-            schedule_dir = filedialog.askopenfilename(initialdir = f'schedules/', filetypes =(('JSON Files', "*.json"),), title = 'Open File')
+            schedule_dir = filedialog.askopenfilename(initialdir = pathlib.Path('schedules'), filetypes =(('JSON Files', "*.json"),), title = 'Open File')
             file = open(schedule_dir)
         except FileNotFoundError:
             if schedule_dir != '':
                 tkmsg.showinfo('Error', f'File cannot be opened at the given path.\n{schedule_dir}')
         else: 
             file.close()
-            recent = open('schedules/recent.txt', 'w')
+            recent = open(pathlib.Path('schedules/recent.txt'), 'w')
             recent.write(pathlib.Path(schedule_dir).parts[-1].replace('.track', ''))
             recent.close()
             schedule.open_schedule(self._root, self._root_frame, open(schedule_dir), self)
@@ -78,13 +79,13 @@ class StartingPage:
         if recent_name != '':
             file = None
             try:
-                file = open(f'schedules/{recent_name}')
+                file = open(pathlib.Path(f'schedules/{recent_name}'))
             except FileNotFoundError:
                 tkmsg.showinfo('Warning', f'{recent_name} cannot be found.')
             
             if file is not None:
                 file.close()
-            schedule.open_schedule(self._root, self._root_frame, open(f'schedules/{recent_name}'), self)
+            schedule.open_schedule(self._root, self._root_frame, open(pathlib.Path(f'schedules/{recent_name}')), self)
         else:
             tkmsg.showinfo('Warning', f'You have no recently opened schedules.')
             

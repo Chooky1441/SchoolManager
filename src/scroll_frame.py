@@ -2,7 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 
 class ScrollingFrame:
-    def __init__(self, frame: tk.Frame, row = 0, column = 0, columnspan = 1, height_border = 0):
+    def __init__(self, frame: tk.Frame, row = 0, column = 0, columnspan = 1, height_border = 0, w_cutoff = 15, h_cuttoff = 15, scroll_size = 0):
+        self._w_cutoff = w_cutoff
+        self._h_cutoff = h_cuttoff
+        self._scroll_size = scroll_size
         self._height_border = height_border
         self._parent_frame = frame
         self._frame_canvas = tk.Frame(frame)
@@ -33,7 +36,6 @@ class ScrollingFrame:
         self.update_canvas()
     
     def update_canvas(self, event = None) -> None:
-        #print('CANVAS')
         self.frame.update_idletasks()
         h = self._parent_frame.winfo_height() - self._height_border
         if h < self.frame.winfo_reqheight():
@@ -47,9 +49,7 @@ class ScrollingFrame:
         
     def update_frame(self, event = None) -> None:
         delta_w, delta_h = abs(self._previous_width - self.frame.winfo_width()), abs(self._previous_height - self.frame.winfo_height())
-        if delta_w > 30 or delta_h > 30 or event == 'force': 
+        if delta_w >= self._w_cutoff or delta_h >= self._h_cutoff:
             self._previous_width = self.frame.winfo_width()
             self._previous_height = self.frame.winfo_height()
-            self._canvas.configure(scrollregion = self._canvas.bbox(tk.ALL), width = self.frame.winfo_width(), height = self.frame.winfo_height())
-        
-        
+            self._canvas.configure(scrollregion = self._canvas.bbox(tk.ALL), width = self.frame.winfo_width() - self._scroll_size, height = self.frame.winfo_height())

@@ -1,14 +1,19 @@
 import tkinter as tk
 from starting_page import StartingPage
+import utils
 
 class ClassManager:
     
     def __init__(self):
+    
+        
         self._root = tk.Tk()
         self._root.minsize(700, 350)
         self._root.title('School Manager')
         
         self._root.bind('<Control-q>', self._quit)
+        
+        utils.init_root_options(self._root)
         
         self._root_frame = tk.Frame(self._root)
         self._root_frame.pack(fill = tk.BOTH, expand = True)

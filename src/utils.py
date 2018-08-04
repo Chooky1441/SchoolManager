@@ -6,18 +6,24 @@
 import tkinter as tk
 from tkinter import ttk
 
-def create_label(frame, text, row = 0, column = 0, colspan = 1, padx = 5, pady = 5, sticky = tk.NSEW):
-    lab = tk.Label(frame, text = text)
+OFF_WHITE = '#bdc3c7'
+FONT = ('Segoe UI', 10)
+FONT_BIG = ('Segoe UI', 14, 'bold')
+
+def create_label(frame, text, row = 0, column = 0, colspan = 1, padx = 5, pady = 5, sticky = tk.NSEW, relief = tk.FLAT):
+    lab = tk.Label(frame, text = text, relief = relief, font = FONT)
     lab.grid(row = row, column = column, columnspan = colspan, padx = padx, pady = pady, sticky = sticky)
     return lab
 
 def create_button(frame, text, command, row = 0, column = 0, sticky = tk.NSEW, padx = 5, pady = 5, colspan = 1) -> ttk.Button:
-    button = ttk.Button(frame, text = text, command = command)
+    s = ttk.Style()
+    s.configure('TButton', font = FONT)
+    button = ttk.Button(frame, text = text, command = command, style = 'TButton')
     button.grid(row = row, column = column, padx = padx, pady = pady, sticky = sticky, columnspan = colspan)
     return button
     
 def create_labeled_entry(frame, label_text, row, column = 0, padx = 5, pady = 5, insert = '') -> tk.Entry:
-    tk.Label(frame, text = label_text).grid(row = row , column = column, padx = padx, pady = pady)
+    tk.Label(frame, text = label_text, font = FONT).grid(row = row , column = column, padx = padx, pady = pady)
     entry = tk.Entry(frame)
     entry.insert(0, insert)
     entry.grid(row = row, column = column + 1, padx = padx, pady = pady)
@@ -29,7 +35,7 @@ def create_option_menu(frame, str_var, options: [str], row, column, padx = 5, pa
     return menu
 
 def create_title(frame, text, colspan = 0, padx = 5, pady = 5, pack = False) -> None:
-    lab = tk.Label(frame, text = text, font = 'Tahoma 18 bold')
+    lab = tk.Label(frame, text = text, font = FONT_BIG, bg = 'light grey')
     sep = ttk.Separator(frame, orient = tk.HORIZONTAL)
     if pack:
         lab.pack(fill = tk.X, padx = padx, pady = pady)
@@ -61,6 +67,25 @@ def configure_frame(frame, rowspan = 0, rowoffset = 0, colspan = 0, coloffset = 
         frame.rowconfigure(i + rowspan, weight = 1)
     for i in range(colspan - coloffset):
         frame.columnconfigure(i + coloffset, weight = 1)
+        
+def init_theme() -> None:
+    try:
+        ttk.Style().theme_use('vista')
+    except:
+        print('Failed to change theme to vista, attempting aqua.')
+        try:
+            ttk.Style().theme_use('aqua')
+        except:
+            print('Failed to change theme to aqua, using default.')
+            
+#def ttkLabelFrame(frame, text) -> ttk.LabelFrame:
+    #self._frame_style = ttk.Style()
+    #self._frame_style.configure('TLabelframe', background = 'white')
+    
+def init_root_options(root) -> None:
+    root.option_add('*Font', FONT)
+    root.option_add('*Background', 'white')
+    root['bg'] = 'white'
         
         
         

@@ -91,15 +91,18 @@ class Course:
         self.assignments.remove(a)
         
 class TkCourse:
-    def __init__(self, schedule, tkschedule, root_tracker: root_tracker.Root_Tracker):
+    
+    def __init__(self, schedule, tkschedule, root_tracker: root_tracker.Root_Tracker, c: Course = None):
         self._schedule = schedule
         self._tkschedule = tkschedule
         self._root_tracker = root_tracker
+        self._c = c
         
         self._root = tk.Tk()
-        ttk.Style(self._root).theme_use('vista')
+        utils.init_theme()
         self._root.minsize(300, 300)
-        self._root.title('Add A Course')
+        
+            
         self._root.protocol('WM_DELETE_WINDOW', self.destroy)
         self._root_tracker.add_root(self._root)
         self._root.columnconfigure(0, weight = 1)
@@ -107,32 +110,14 @@ class TkCourse:
             
         self._total_rows = 17
         self._total_categories = 0
-            
-        utils.create_title(self._root, 'Add A Course', 1, pady = 1)
 
         self._scroll = ScrollingFrame(self._root, 2, 0, height_border = 105)
         self._scroll_frame = self._scroll.frame
         utils.configure_frame(self._scroll_frame, colspan = 2)
         
-        self._name = utils.create_labeled_entry(self._scroll_frame, 'Name:', 0, 0)
-        self._units = utils.create_labeled_entry(self._scroll_frame, 'Units:', 1, 0)
-        
         utils.create_separator(self._scroll_frame, 2, 0, colspan = 2)
         
-        self._a = utils.create_labeled_entry(self._scroll_frame, 'A  cutoff:', 3, insert = '93.5')
-        self._a_minus = utils.create_labeled_entry(self._scroll_frame, 'A- cutoff:', 4, insert = '90.0')
-        self._b_plus = utils.create_labeled_entry(self._scroll_frame, 'B+ cutoff:', 5, insert = '86.5')
-        self._b = utils.create_labeled_entry(self._scroll_frame, 'B  cutoff:', 6, insert = '83.5')
-        self._b_minus = utils.create_labeled_entry(self._scroll_frame, 'B- cutoff:', 7, insert = '80.0')
-        self._c_plus = utils.create_labeled_entry(self._scroll_frame, 'C+ cutoff:', 8, insert = '76.5')
-        self._c = utils.create_labeled_entry(self._scroll_frame, 'C  cutoff:', 9, insert = '73.5')
-        self._c_minus = utils.create_labeled_entry(self._scroll_frame, 'C- cutoff:', 10, insert = '70.0')
-        self._d_plus = utils.create_labeled_entry(self._scroll_frame, 'D+ cutoff:', 11, insert = '66.5')
-        self._d = utils.create_labeled_entry(self._scroll_frame, 'D  cutoff:', 12, insert = '63.5')
-        self._d_minus = utils.create_labeled_entry(self._scroll_frame, 'D- cutoff:', 13, insert = '60.0')
-        
         self._grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D-']
-        self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c, self._c_minus, self._d_plus, self._d, self._d_minus]
 
         utils.create_separator(self._scroll_frame, 14, 0, colspan = 2)
         
@@ -141,12 +126,9 @@ class TkCourse:
         utils.create_button(self._scroll_frame, 'Add Category', command = self._add_category, row = 999, column = 0, colspan = 2)
         utils.create_button(self._scroll_frame, 'Remove Category', command = self._remove_category, row = 1000, column = 0, colspan = 2)
         
-        utils.create_button(self._root, 'Add Course', command = self._create, row = 3, column = 0, colspan = 2)
-        
         self._add_category('General', 100).config(state = 'disabled')
         
-        print(self._root.winfo_height())
-        self._root.mainloop()
+    
         
     def _add_category(self, name = '', percent = 0) -> None:
         """adds a catatory to the screen, also updating the canvas"""
@@ -165,7 +147,7 @@ class TkCourse:
         self._scroll.update_canvas()
         return name
        
-
+       
     def _remove_category(self) -> None:
         """removes the most revent category"""
         if len(self._categories) > 1: 
@@ -173,11 +155,44 @@ class TkCourse:
             self._total_rows -= 1
             self._total_categories -= 1
             del self._categories[-1]
-        self._scroll_frame.update_canvas()
+        self._scroll.update_canvas()
+                    
+    def destroy(self) -> None:
+        """destoys the root window and removes it from the tkschedule list"""
+        self._root_tracker.remove_root(self._root)
+        self._root.destroy()   
         
-                
+    
+class NewTkCourse(TkCourse):
+    
+    def __init__(self, schedule, tkschedule, root_tracker: root_tracker.Root_Tracker):
+        TkCourse.__init__(self, schedule, tkschedule, root_tracker)
+        self._root.title('Add A Course')
+        
+        utils.create_title(self._root, 'Add A Course', 1, pady = 1)
+        self._name = utils.create_labeled_entry(self._scroll_frame, 'Name:', 0, 0)
+        self._units = utils.create_labeled_entry(self._scroll_frame, 'Units:', 1, 0)
+        
+        self._a = utils.create_labeled_entry(self._scroll_frame, 'A  cutoff:', 3, insert = '93.5')
+        self._a_minus = utils.create_labeled_entry(self._scroll_frame, 'A- cutoff:', 4, insert = '90.0')
+        self._b_plus = utils.create_labeled_entry(self._scroll_frame, 'B+ cutoff:', 5, insert = '86.5')
+        self._b = utils.create_labeled_entry(self._scroll_frame, 'B  cutoff:', 6, insert = '83.5')
+        self._b_minus = utils.create_labeled_entry(self._scroll_frame, 'B- cutoff:', 7, insert = '80.0')
+        self._c_plus = utils.create_labeled_entry(self._scroll_frame, 'C+ cutoff:', 8, insert = '76.5')
+        self._c = utils.create_labeled_entry(self._scroll_frame, 'C  cutoff:', 9, insert = '73.5')
+        self._c_minus = utils.create_labeled_entry(self._scroll_frame, 'C- cutoff:', 10, insert = '70.0')
+        self._d_plus = utils.create_labeled_entry(self._scroll_frame, 'D+ cutoff:', 11, insert = '66.5')
+        self._d = utils.create_labeled_entry(self._scroll_frame, 'D  cutoff:', 12, insert = '63.5')
+        self._d_minus = utils.create_labeled_entry(self._scroll_frame, 'D- cutoff:', 13, insert = '60.0')
+        
+        self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c, self._c_minus, self._d_plus, self._d, self._d_minus]
+        
+        utils.create_button(self._root, 'Add Course', command = self._create, row = 3, column = 0, colspan = 2)
+        
+        self._root.mainloop()
+        
     def _create(self) -> tuple:
-        """tries to add the course to the schedule, checking for any invalid inputs"""
+        """Adds the course to the schedule"""
         # check if the name is value
         if self._name.get().replace(' ', '') == '':
             tkmsg.showerror('Warning', '"Name" entry cannot be left blank.')
@@ -219,7 +234,6 @@ class TkCourse:
                         else:
                             self._create_course()
                             
-                            
     def _create_course(self) -> None:
         course = Course(self._name.get(), int(self._units.get()), 
                                           float(self._a.get()), float(self._a_minus.get()), 
@@ -230,8 +244,41 @@ class TkCourse:
         self.destroy()
         self._schedule.add_course(course)
         self._tkschedule.add_tkcourse(course)  
-                    
-    def destroy(self) -> None:
-        """destoys the root window and removes it from the tkschedule list"""
-        self._root_tracker.remove_root(self._root)
-        self._root.destroy()                    
+                            
+
+class EditTkCourse(TkCourse):
+    
+    def __init__(self, schedule, tkschedule, root_tracker: root_tracker.Root_Tracker, c: Course):
+        TkCourse.__init__(self, schedule, tkschedule, root_tracker)   
+        self._c = c
+        self._root.title('Edit Course')
+        
+        utils.create_title(self._root, f'Edit {self._c.name}', 1, pady = 1)
+        
+        self._name = utils.create_labeled_entry(self._scroll_frame, 'Name:', 0, 0, insert = self._c.name)
+        self._units = utils.create_labeled_entry(self._scroll_frame, 'Units:', 1, 0, insert = self._c.units)
+        
+        self._a = utils.create_labeled_entry(self._scroll_frame, 'A  cutoff:', 3, insert = self._c._a)
+        self._a_minus = utils.create_labeled_entry(self._scroll_frame, 'A- cutoff:', 4, insert = self._c._a_minus)
+        self._b_plus = utils.create_labeled_entry(self._scroll_frame, 'B+ cutoff:', 5, insert = self._c._b_plus)
+        self._b = utils.create_labeled_entry(self._scroll_frame, 'B  cutoff:', 6, insert = self._c._b)
+        self._b_minus = utils.create_labeled_entry(self._scroll_frame, 'B- cutoff:', 7, insert = self._c._b_minus)
+        self._c_plus = utils.create_labeled_entry(self._scroll_frame, 'C+ cutoff:', 8, insert = self._c._c_plus)
+        self._c = utils.create_labeled_entry(self._scroll_frame, 'C  cutoff:', 9, insert = self._c._c)
+        self._c_minus = utils.create_labeled_entry(self._scroll_frame, 'C- cutoff:', 10, insert = self._c._c_minus)
+        self._d_plus = utils.create_labeled_entry(self._scroll_frame, 'D+ cutoff:', 11, insert = self._c._d_plus)
+        self._d = utils.create_labeled_entry(self._scroll_frame, 'D  cutoff:', 12, insert = self._c._d)
+        self._d_minus = utils.create_labeled_entry(self._scroll_frame, 'D- cutoff:', 13, insert = self._c._d_minus)
+        
+        self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c, self._c_minus, self._d_plus, self._d, self._d_minus]
+        
+        utils.create_button(self._root, 'Update Course', command = self._create, row = 3, column = 0, colspan = 2)
+        
+        for cat, percent in self._c.categories.items():
+            self._add_category(cat, percent)
+        
+        self._root.mainloop()
+        
+        
+        
+                     
