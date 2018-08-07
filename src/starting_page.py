@@ -10,10 +10,7 @@ class StartingPage:
     def __init__(self, root: tk.Tk, root_frame: tk.Frame):
         self._root = root
         self._root_frame = root_frame
-        
-        utils.init_theme()
-                
-        
+                    
         self._frame = tk.Frame(self._root_frame)
         self._frame.grid(row = 0, column = 0, sticky = tk.NSEW)
         self._frame.columnconfigure(0, weight = 10)

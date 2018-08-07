@@ -27,7 +27,7 @@ class Course_Widget:
         for i in range(2):
             name_frame.columnconfigure(i, weight = 1, uniform = 'name')
         
-        utils.create_label(name_frame, self._c.name, 0, 1, sticky = tk.W)    
+        self._name = utils.create_label(name_frame, self._c.name, 0, 1, sticky = tk.W)    
     
         # initializes the course info
         self._units = utils.create_label(self._frame, self._c.units, 0, 1, padx = 0)
@@ -39,21 +39,16 @@ class Course_Widget:
         self._course_frame.grid(row = 1, column = 0, columnspan = self.COLSPAN, sticky = tk.NSEW)
         utils.configure_frame(self._course_frame, rowspan = 2, colspan = 1)
         self._course_frame.grid_remove()
-        
-        self._frame_style = ttk.Style()
-        self._frame_style.configure('TLabelframe', background = 'white')
-        
+    
         # initializes the options frame
-        options_frame = ttk.LabelFrame(self._course_frame, labelwidget = tk.Label(self._frame, text = 'Options', fg = '#365ddc'), borderwidth = 15, labelanchor = tk.N, style = 'TLabelframe')
-        options_frame.grid(row = 0, column = 0, sticky = tk.NSEW, padx = 30, pady = 10)
+        options_frame = utils.create_labelframe(self._course_frame, 'Options', 0, 0)
         utils.configure_frame(options_frame, colspan = 3)
         utils.create_button(options_frame, 'Add Assignment', lambda: self._create_assignment(), 0, 0)
         utils.create_button(options_frame, 'Edit Course', lambda: self._edit_course(), 0, 1)
         utils.create_button(options_frame, 'Remove Course', lambda: self._remove_tkcourse(), 0, 2)
 
         # initializes the assignments frame
-        self._assignments_frame = ttk.LabelFrame(self._course_frame, labelwidget = tk.Label(self._frame, text = 'Assignments', fg = '#365ddc'), borderwidth = 15, labelanchor = tk.N, style = 'TLabelframe')
-        self._assignments_frame.grid(row = 1, column = 0, sticky = tk.NSEW, padx = 30, pady = 10)
+        self._assignments_frame = utils.create_labelframe(self._course_frame, 'Assignments', 1, 0)
         for i in range(self.A_COLSPAN):
             self._assignments_frame.columnconfigure(i, weight = 1, uniform = 'assignment')    
         
@@ -71,11 +66,11 @@ class Course_Widget:
             for i in range(len(self._c.assignments)):
                 self._update_tkassignment(self._c.assignments[i], i + 1)
                 
-        utils.create_separator(self._frame, 2, 0, self.COLSPAN, 0, 0)
+        utils.create_separator(self._frame, 2, 0, self.COLSPAN, 0, 5)
     
         
     def _edit_course(self) -> None:
-        course.EditTkCourse()
+        course.EditTkCourse(self._schedule, self._root_tracker, self._c, self)
         
     def _remove_tkcourse(self) -> None:
         """Confirms that the user wants to remove the course, then removes it"""
@@ -97,6 +92,11 @@ class Course_Widget:
         
     def grid(self, row = 0, column = 0) -> None:
         self._frame.grid(row = row, column = column, sticky = tk.NSEW)
+        
+    def update_course(self) -> None:
+        self._name['text'] = self._c.name
+        self._units['text'] = self._c.units
+        self._grade['text'] = self._c.grade
         
     def destroy(self) -> None:
         for widget in self._frame.winfo_children():

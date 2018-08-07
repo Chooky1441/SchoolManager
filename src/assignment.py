@@ -58,24 +58,22 @@ class TkAssignment:
     def _check_valid_inputs(self) -> bool:
         if self._name.get().replace(' ', '') == '':
             tkmsg.showerror('Warning', '"Name" entry cannot be left blank.')
-            return False
         else:
             try:
                 if self._use_points.get() == 0:
                     float(self._points.get())
             except (NameError, ValueError):
                 tkmsg.showerror('Warning', '"Points Received" entry must be a number.')
-                return False
             else:
                 try:
                     float(self._points_total.get())
                 except (NameError, ValueError):
                     tkmsg.showerror('Warning', '"Total Points" entry must be a number.')
-                    return False
                 else:
                     if self._use_points.get() == 0:
                         self._points_entry = float(self._points.get())
                     return True
+        return False
         
         
     def destroy(self) -> None:
@@ -115,7 +113,7 @@ class EditTkAssignment(TkAssignment):
         self._root.title('Edit Assignment')
         self._points = a.points
         
-        utils.create_title(self._root, f'Edit {a.name}', self.COLSPAN)
+        utils.create_title(self._root, f'Edit Assignment', self.COLSPAN)
         self._name = utils.create_labeled_entry(self._root, 'Name:', 2, 0, insert = a.name)
         p = '' if a.points is None else a.points
         self._points = utils.create_labeled_entry(self._root, 'Points Received:', 3, 0, insert = p)

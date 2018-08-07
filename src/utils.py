@@ -10,6 +10,8 @@ OFF_WHITE = '#bdc3c7'
 FONT = ('Segoe UI', 10)
 FONT_BIG = ('Segoe UI', 14, 'bold')
 
+
+
 def create_label(frame, text, row = 0, column = 0, colspan = 1, padx = 5, pady = 5, sticky = tk.NSEW, relief = tk.FLAT):
     lab = tk.Label(frame, text = text, relief = relief, font = FONT)
     lab.grid(row = row, column = column, columnspan = colspan, padx = padx, pady = pady, sticky = sticky)
@@ -78,14 +80,17 @@ def init_theme() -> None:
         except:
             print('Failed to change theme to aqua, using default.')
             
-#def ttkLabelFrame(frame, text) -> ttk.LabelFrame:
-    #self._frame_style = ttk.Style()
-    #self._frame_style.configure('TLabelframe', background = 'white')
+def create_labelframe(frame, text, row, column, padx = 30, pady = 10, colspan = 1) -> ttk.LabelFrame:
+    labelframe = ttk.Labelframe(frame, labelwidget = tk.Label(frame, text = text, fg = '#365ddc'), borderwidth = 15, labelanchor = tk.N, style = 'TLabelframe')
+    labelframe.grid(row = row, column = column, columnspan = colspan, sticky = tk.NSEW, padx = padx, pady = pady)
+    return labelframe
     
 def init_root_options(root) -> None:
     root.option_add('*Font', FONT)
     root.option_add('*Background', 'white')
     root['bg'] = 'white'
+    s = ttk.Style(root)
+    s.configure('TLabelframe', background = 'white')
         
         
         

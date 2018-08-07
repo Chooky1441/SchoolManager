@@ -102,7 +102,7 @@ class TkSchedule:
         self._status_color = 'dark grey'
         self._status_frame = tk.Frame(self._frame, bg = self._status_color)
         self._status_frame.grid(row = 0, column = 0, columnspan = 4, sticky = tk.NSEW)
-        utils.configure_frame(self._status_frame, colspan = 5)
+        utils.configure_frame(self._status_frame, colspan = 6)
         
         self._project_name = tk.Label(self._status_frame, bg = self._status_color, text = self._schedule.name)
         self._project_name.grid()
@@ -110,10 +110,13 @@ class TkSchedule:
         self._total_units.grid(row = 0, column = 1)
         self._enrolled_units = tk.Label(self._status_frame, bg = self._status_color, text = f'Units Enrolled In: {sum([c.units for c in self._schedule.courses])}')
         self._enrolled_units.grid(row = 0, column = 2)
-        self._gpa = tk.Label(self._status_frame, bg = self._status_color, text = f'GPA: {self._schedule.gpa}')
-        self._gpa.grid(row = 0, column = 3)
         self._total_courses = tk.Label(self._status_frame, bg = self._status_color, text = f'Total Courses: {len(self._schedule)}')
-        self._total_courses.grid(row = 0, column = 4)
+        self._total_courses.grid(row = 0, column = 3)
+        self._gpa = tk.Label(self._status_frame, bg = self._status_color, text = f'GPA: {self._schedule.gpa}')
+        self._gpa.grid(row = 0, column = 4)
+        self._gpa_projected = tk.Label(self._status_frame, bg = self._status_color, text = f'Projected GPA: {self._schedule.gpa}')
+        self._gpa_projected.grid(row = 0, column = 5)
+        
         
         # initialize course labels
         self._info_color = 'light grey'
@@ -199,8 +202,4 @@ class TkSchedule:
         
     def _create_tkcourse(self) -> None:
         course.NewTkCourse(self._schedule, self, self._root_tracker)
-
- 
-
-        
         
