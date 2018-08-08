@@ -108,6 +108,13 @@ class Course:
         """Removes the given assignment from the course"""
         self.assignments.remove(a)
         
+class Category:
+    
+    def __init__(self, frame, name, percent):
+        self.frame = frame
+        self.name = name
+        self.percent = percent
+        
 class TkCourse:
     
     def __init__(self, schedule, root_tracker: root_tracker.Root_Tracker, c: Course = None):
@@ -137,32 +144,42 @@ class TkCourse:
         
         self._grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D-']
         
-        self._categories = []
+        self._categories = dict()
         
-        utils.create_button(self._scroll_frame, 'Add Category', command = self._add_category, row = 999, column = 0, colspan = 2)
-        utils.create_button(self._scroll_frame, 'Remove Category', command = self._remove_category, row = 1000, column = 0, colspan = 2)
+        utils.create_button(self._category_frame, 'Add Category', command = self._add_category, row = 0, column = 0, colspan = 2)
         
-    def _add_category(self, name = '', percent = 0) -> None:
+        self._buttons_frame = tk.Frame(self._root)
+        self._buttons_frame.grid(row = 4, column = 0, sticky = tk.NSEW)
+        utils.configure_frame(self._buttons_frame, colspan = 2)
+        utils.create_button(self._buttons_frame, 'Cancel', command = self.destroy, column = 1)
+        
+    def _add_category(self, name = '', percent = 0, is_gen = False) -> None:
         """adds a catatory to the screen, also updating the canvas"""
         category_frame = tk.Frame(self._category_frame)
-        category_frame.grid(row = len(self._categories), column = 0, columnspan = 2, sticky = tk.NSEW)
-        utils.configure_frame(category_frame, colspan = 2)
+        category_frame.grid(row = len(self._categories) + 1, column = 0, columnspan = 2, sticky = tk.NSEW)
+        utils.configure_frame(category_frame, rowspan = 4, colspan = 2)
         
-        utils.create_label(category_frame, f'Category {len(self._categories) + 1}:', 0)
+        if not is_gen:
+            utils.create_separator(category_frame, 0, 0, colspan = 2, pady = 10)
         name = utils.create_labeled_entry(category_frame, 'Name:', 1, insert = name)
         percent = utils.create_labeled_entry(category_frame, 'Percent of Grade:', 2, insert = percent)
-        utils.create_separator(category_frame, 3, 0, colspan = 2)
-        self._categories.append((category_frame, name, percent))
+        
+        cat = Category(category_frame, name, percent)
+        
+        if not is_gen:
+            utils.create_button(category_frame, 'Remove', lambda: self._remove_category(id(cat)), 3, 0, sticky = tk.NS)
+    
+        self._categories.update({id(cat): cat})
         
         self._scroll.update_canvas()
+        
         return name
        
        
-    def _remove_category(self) -> None:
+    def _remove_category(self, cat: int) -> None:
         """removes the most revent category"""
-        if len(self._categories) > 1: 
-            self._categories[-1][0].destroy()
-            del self._categories[-1]
+        self._categories[cat].frame.destroy()
+        del self._categories[cat]
         self._scroll.update_canvas()
         
         
@@ -188,15 +205,15 @@ class TkCourse:
                 else:
                     # check that each category has valid inputs (title, name, pecent, sep)
                     total_percent = 0
-                    for i in range(len(self._categories)):
-                        if self._categories[i][1].get().replace(' ', '') == '':
-                            tkmsg.showerror('Warning', f'"Name" entry on Category {i + 1} cannot be left blank.')
+                    for _, cat in self._categories.items():
+                        if cat.name.get().replace(' ', '') == '':
+                            tkmsg.showerror('Warning', f'"Name" entry on cannot be left blank on any categories.')
                             break
                         else:
                             try:
-                                total_percent += float(self._categories[i][2].get())
+                                total_percent += float(cat.percent.get())
                             except (NameError, ValueError):
-                                tkmsg.showerror('Warning', f'"Percent" of Category {i + 1} must be a number.')
+                                tkmsg.showerror('Warning', f'"Percent" of Category {cat.name} must be a number.')
                                 break
                     else:
                         # check that the category percent add up to 100 or more  
@@ -210,7 +227,7 @@ class TkCourse:
         return False
                     
     def destroy(self) -> None:
-        """destoys the root window and removes it from the tkschedule list"""
+        """destroys the root window and removes it from the tkschedule list"""
         self._root_tracker.remove_root(self._root)
         self._root.destroy()   
         
@@ -240,9 +257,9 @@ class NewTkCourse(TkCourse):
         
         self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c, self._c_minus, self._d_plus, self._d, self._d_minus]
         
-        utils.create_button(self._root, 'Add Course', command = self._create, row = 3, column = 0, colspan = 2)
+        utils.create_button(self._buttons_frame, 'Add Course', command = self._create, column = 0)
         
-        self._add_category('General', 100).config(state = 'disabled')
+        self._add_category('General', 100, True).config(state = 'disabled')
         
         self._root.mainloop()
         
@@ -254,7 +271,7 @@ class NewTkCourse(TkCourse):
                                               float(self._b_plus.get()), float(self._b.get()), float(self._b_minus.get()), 
                                               float(self._c_plus.get()), float(self._c.get()), float(self._c_minus.get()), 
                                               float(self._d_plus.get()), float(self._d.get()), float(self._d_minus.get()), 
-                                              {name.get(): float(percent.get()) for _, name, percent in self._categories})
+                                              {cat.name.get(): float(cat.percent.get()) for _, cat in self._categories.items()})
             self.destroy()
             self._schedule.add_course(course)
             self._tkschedule.add_tkcourse(course)  
@@ -268,7 +285,7 @@ class EditTkCourse(TkCourse):
         self._root.title('Edit Course')
         self._course_widget = course_widget
         
-        utils.create_title(self._root, f'Edit {self._c.name}', 1, pady = 1)
+        utils.create_title(self._root, f'Edit Course', 1, pady = 1)
         
         self._name = utils.create_labeled_entry(self._scroll_frame, 'Name:', 0, 0, insert = self._c.name)
         self._units = utils.create_labeled_entry(self._scroll_frame, 'Units:', 1, 0, insert = self._c.units)
@@ -289,10 +306,13 @@ class EditTkCourse(TkCourse):
         
         self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c_grade, self._c_minus, self._d_plus, self._d, self._d_minus]
         
-        utils.create_button(self._root, 'Update Course', command = self._update_course, row = 3, column = 0, colspan = 2)
+        utils.create_button(self._buttons_frame, 'Update Course', command = self._update_course, column = 0)
         
         for cat, percent in self._c.categories.items():
-            self._add_category(cat, percent)
+            if cat == 'General':
+                self._add_category(cat, percent, True)
+            else:
+                self._add_category(cat, percent)
         
         self._root.mainloop()
         
