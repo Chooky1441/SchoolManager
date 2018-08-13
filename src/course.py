@@ -6,11 +6,11 @@ import assignment, root_tracker, utils
                
 class Course:
     
-    A, A_MINUS, B_PLUS, B, B_MINUS, C_PLUS, C, C_MINUS, D_PLUS, D, D_MINUS, F = 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'
+    A, A_MINUS, B_PLUS, B, B_MINUS, C_PLUS, C, C_MINUS, D_PLUS, D, F = 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F'
     
     def __init__(self, name: str, units: int, a: float, a_minus: float, b_plus: float, 
                  b: float, b_minus: float, c_plus: float, c: float, c_minus: float, 
-                 d_plus: float, d: float, d_minus: float, categories = {}, assignments = {}, grade = A):
+                 d_plus: float, d: float, categories = {}, assignments = {}, grade = A):
         self.name = name
         self.units = units
         self._a = a
@@ -23,7 +23,6 @@ class Course:
         self._c_minus = c_minus
         self._d_plus = d_plus
         self._d = d
-        self._d_minus = d_minus
         self.categories = categories
         self.assignments = []
         for name in assignments:
@@ -67,14 +66,12 @@ class Course:
             self.grade = self.D_PLUS
         elif p >= self._d:
             self.grade = self.D 
-        elif p >= self._d_minus:
-            self.grade = self.D_MINUS
         else:
             self.grade = self.F
     
     def update(self, name: str, units: int, a: float, a_minus: float, b_plus: float, 
                  b: float, b_minus: float, c_plus: float, c: float, c_minus: float, 
-                 d_plus: float, d: float, d_minus: float, categories = {}):
+                 d_plus: float, d: float, categories = {}):
         self.name = name
         self.units = units
         self._a = a
@@ -87,7 +84,6 @@ class Course:
         self._c_minus = c_minus
         self._d_plus = d_plus
         self._d = d
-        self._d_minus = d_minus
         self.categories = categories
         
     
@@ -98,7 +94,7 @@ class Course:
         
         return {self.name: {'units': self.units, 'a': self._a, 'a_minus': self._a_minus, 'b_plus': self._b_plus, 'b': self._b, 'b_minus': self._b_minus,
                             'c_plus': self._c_plus, 'c': self._c, 'c_minus': self._c_minus, 'd_plus': self._d_plus, 'd': self._d,
-                            'd_minus': self._d_minus, 'categories': self.categories, 'assignments': assignments_dict, 'grade': self.grade}}
+                             'categories': self.categories, 'assignments': assignments_dict, 'grade': self.grade}}
 
     def add_assignment(self, a: assignment.Assignemnt) -> None:
         """Adds the given assignment to the course"""
@@ -107,6 +103,7 @@ class Course:
     def remove_assignment(self, a: assignment.Assignemnt) -> None:
         """Removes the given assignment from the course"""
         self.assignments.remove(a)
+        self.calculate_grade()
         
 class Category:
     
@@ -142,7 +139,7 @@ class TkCourse:
         
         utils.configure_frame(self._category_frame, rowspan = 1, colspan = 1)
         
-        self._grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D-']
+        self._grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+']
         
         self._categories = dict()
         
@@ -151,7 +148,11 @@ class TkCourse:
         self._buttons_frame = tk.Frame(self._root)
         self._buttons_frame.grid(row = 4, column = 0, sticky = tk.NSEW)
         utils.configure_frame(self._buttons_frame, colspan = 2)
-        utils.create_button(self._buttons_frame, 'Cancel', command = self.destroy, column = 1)
+        utils.create_button(self._buttons_frame, 'Cancel', command = self._cancel, column = 1)
+        
+    def _cancel(self) -> None:
+        if tkmsg.askyesno('Warning', 'Are you sure you want to cancel?'):
+            self._destroy()
         
     def _add_category(self, name = '', percent = 0, is_gen = False) -> None:
         """adds a catatory to the screen, also updating the canvas"""
@@ -253,9 +254,8 @@ class NewTkCourse(TkCourse):
         self._c_minus = utils.create_labeled_entry(self._grade_cutoffs_frame, 'C- :', 7, insert = '70.0')
         self._d_plus = utils.create_labeled_entry(self._grade_cutoffs_frame, 'D+ :', 8, insert = '66.5')
         self._d = utils.create_labeled_entry(self._grade_cutoffs_frame, 'D  :', 9, insert = '63.5')
-        self._d_minus = utils.create_labeled_entry(self._grade_cutoffs_frame, 'D- :', 10, insert = '60.0')
         
-        self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c, self._c_minus, self._d_plus, self._d, self._d_minus]
+        self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c, self._c_minus, self._d_plus, self._d]
         
         utils.create_button(self._buttons_frame, 'Add Course', command = self._create, column = 0)
         
@@ -270,7 +270,7 @@ class NewTkCourse(TkCourse):
                                               float(self._a.get()), float(self._a_minus.get()), 
                                               float(self._b_plus.get()), float(self._b.get()), float(self._b_minus.get()), 
                                               float(self._c_plus.get()), float(self._c.get()), float(self._c_minus.get()), 
-                                              float(self._d_plus.get()), float(self._d.get()), float(self._d_minus.get()), 
+                                              float(self._d_plus.get()), float(self._d.get()), 
                                               {cat.name.get(): float(cat.percent.get()) for _, cat in self._categories.items()})
             self.destroy()
             self._schedule.add_course(course)
@@ -279,11 +279,12 @@ class NewTkCourse(TkCourse):
 
 class EditTkCourse(TkCourse):
     
-    def __init__(self, schedule, root_tracker: root_tracker.Root_Tracker, c: Course, course_widget):
+    def __init__(self, schedule, root_tracker: root_tracker.Root_Tracker, c: Course, course_widget, tkschedule):
         TkCourse.__init__(self, schedule, root_tracker)   
         self._c = c
         self._root.title('Edit Course')
         self._course_widget = course_widget
+        self._tkschedule = tkschedule
         
         utils.create_title(self._root, f'Edit Course', 1, pady = 1)
         
@@ -302,9 +303,8 @@ class EditTkCourse(TkCourse):
         self._c_minus = utils.create_labeled_entry(self._grade_cutoffs_frame, 'C- :', 10, insert = self._c._c_minus)
         self._d_plus = utils.create_labeled_entry(self._grade_cutoffs_frame, 'D+ :', 11, insert = self._c._d_plus)
         self._d = utils.create_labeled_entry(self._grade_cutoffs_frame, 'D  :', 12, insert = self._c._d)
-        self._d_minus = utils.create_labeled_entry(self._grade_cutoffs_frame, 'D- :', 13, insert = self._c._d_minus)
         
-        self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c_grade, self._c_minus, self._d_plus, self._d, self._d_minus]
+        self._grades_values = [self._a, self._a_minus, self._b_plus, self._b, self._b_minus, self._c_plus, self._c_grade, self._c_minus, self._d_plus, self._d]
         
         utils.create_button(self._buttons_frame, 'Update Course', command = self._update_course, column = 0)
         
@@ -332,9 +332,10 @@ class EditTkCourse(TkCourse):
                                                   float(self._a.get()), float(self._a_minus.get()), 
                                                   float(self._b_plus.get()), float(self._b.get()), float(self._b_minus.get()), 
                                                   float(self._c_plus.get()), float(self._c_grade.get()), float(self._c_minus.get()), 
-                                                  float(self._d_plus.get()), float(self._d.get()), float(self._d_minus.get()), 
-                                                  {name.get(): float(percent.get()) for _, name, percent in self._categories})
+                                                  float(self._d_plus.get()), float(self._d.get()), 
+                                                  {cat.name.get(): float(cat.percent.get()) for _, cat in self._categories.items()})
         self._c.calculate_grade()
+        self._tkschedule.update_projected_gpa()
         self._course_widget.update_course()
         self.destroy()
                  

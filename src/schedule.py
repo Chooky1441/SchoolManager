@@ -2,18 +2,19 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as tkmsg
 from scroll_frame import ScrollingFrame
-import course, course_widget, json, pathlib, root_tracker, utils
+import course, course_widget, edit_schedule, json, pathlib, root_tracker, utils
 
 class Schedule:
     
-    def __init__(self, name: str, units: int, gpa: float, courses = {}):
+    def __init__(self, name: str, units: int, gpa: float, projected_gpa: float, courses = {}):
         self.name = name
         self.units = units
         self.gpa = gpa
+        self.projected_gpa = projected_gpa
         self.courses = []
         for name in courses:
-            units, a, a_minus, b_plus, b, b_minus, c_plus, c, c_mins, d_plus, d, d_minus, categories, assignments, grade = courses[name].values()
-            self.courses.append(course.Course(name, units, float(a), float(a_minus), float(b_plus), float(b), float(b_minus), float(c_plus), float(c), float(c_mins), float(d_plus), float(d), float(d_minus), categories, assignments, grade))
+            units, a, a_minus, b_plus, b, b_minus, c_plus, c, c_mins, d_plus, d, categories, assignments, grade = courses[name].values()
+            self.courses.append(course.Course(name, units, float(a), float(a_minus), float(b_plus), float(b), float(b_minus), float(c_plus), float(c), float(c_mins), float(d_plus), float(d), categories, assignments, grade))
     
     def __str__(self) -> str:
         c = '\n'.join([str(c) for c in self.courses])
@@ -35,13 +36,25 @@ class Schedule:
         courses_dict = dict()
         for c in self.courses:
             courses_dict.update(c.get_dict())
-        return {'name': self.name, 'units': self.units, 'gpa': self.gpa, 'courses': courses_dict}
+        return {'name': self.name, 'units': self.units, 'gpa': self.gpa, 'projected_gpa': self.projected_gpa, 'courses': courses_dict}
+    
+    def calculate_projected_gpa(self) -> None:
+        """calculates the projected gpa based on the schedule's courses"""
+        
+        def convert_grade_to_gpa(grade: str) -> None:
+            return {'A': 4, 'A-': 3.7, 'B+': 3.3, 'B': 3, 'B-': 2.7, 'C+': 2.3, 'C': 2, 'C-': 1.7, 'D+': 1.3, 'D': 1, 'F': 0}[grade]
+            
+        course_gpa = sum({convert_grade_to_gpa(course.grade) for course in self.courses})/len(self)
+        course_units = sum({course.units for course in self.courses})
+        total_units = self.units + course_units
+        self.projected_gpa = self.gpa * (self.units / total_units) + course_gpa * (course_units / total_units)
+        
  
 def open_schedule(root, root_frame, open_file, start_page) -> None:
     """opens a schedule from a json file"""
     s = get_schedule_dict(open_file)
     open(pathlib.Path('schedules/recent.txt'), 'w').write(s['name'] + '.json')
-    TkSchedule(root, root_frame, Schedule(s['name'], int(s['units']), float(s['gpa']), s['courses']), start_page)
+    TkSchedule(root, root_frame, Schedule(s['name'], int(s['units']), float(s['gpa']), float(s['projected_gpa']), s['courses']), start_page)
     
 def get_schedule_dict(open_file) -> dict:
     """returns a dict of the json file containing the schedule info"""
@@ -114,7 +127,7 @@ class TkSchedule:
         self._total_courses.grid(row = 0, column = 3)
         self._gpa = tk.Label(self._status_frame, bg = self._status_color, text = f'GPA: {self._schedule.gpa}')
         self._gpa.grid(row = 0, column = 4)
-        self._gpa_projected = tk.Label(self._status_frame, bg = self._status_color, text = f'Projected GPA: {self._schedule.gpa}')
+        self._gpa_projected = tk.Label(self._status_frame, bg = self._status_color, text = f'Projected GPA: {round(self._schedule.projected_gpa, 2)}')
         self._gpa_projected.grid(row = 0, column = 5)
         
         
@@ -169,7 +182,7 @@ class TkSchedule:
         save_schedule(self._schedule)
         
     def _edit(self, event = None) -> None:
-        print('edit_schedule')
+        edit_schedule.EditTkSchedule(self)
     
     def _destroy(self) -> None:
         """destroys all open course windows as well as the roots and assignments"""
@@ -182,6 +195,11 @@ class TkSchedule:
                 self._destroy()
         else:
             self._destroy()
+            
+    def update_projected_gpa(self) -> None:
+        """calculates and then displays the projected gpa"""
+        self._schedule.calculate_projected_gpa()
+        self._gpa_projected['text'] = f'Projected GPA: {round(self._schedule.projected_gpa, 2)}'
     
     def load_tkschedule(self):
         self._frame.tkraise()
@@ -190,10 +208,9 @@ class TkSchedule:
     
     def add_tkcourse(self, c: course.Course) -> None:
         """adds a course to the display"""
-        course_widget.Course_Widget(c, self._courses_frame, self._course_scroll, self._schedule, self._root_tracker).grid(row = self._total_rows)
+        course_widget.Course_Widget(c, self._courses_frame, self._course_scroll, self._schedule, self._root_tracker, self).grid(row = self._total_rows)
         self._total_rows += 1
         self._total_courses.config(text = f'Total Courses: {len(self._schedule)}')
-        self._course_scroll.update_canvas()
         
     def _init_courses(self) -> None:
         """adds the courses read from the json file to the screen"""
@@ -201,5 +218,5 @@ class TkSchedule:
             self.add_tkcourse(c)
         
     def _create_tkcourse(self) -> None:
+        """opens the new course dialog"""
         course.NewTkCourse(self._schedule, self, self._root_tracker)
-        

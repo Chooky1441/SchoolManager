@@ -56,7 +56,7 @@ def raise_frame(frame) -> None:
     
 def clear_frame(frame) -> None:
     for widget in frame.winfo_children():
-            widget.destroy()
+        widget.destroy()
     
 def set_widget_image(widget: 'TkWidget', image: str, x = 1, y = 1) -> None:
     img = tk.PhotoImage(file = image)
