@@ -28,6 +28,8 @@ class TkCreateSchedule:
         
         utils.create_button(self._frame, 'Create', self._create, self.ROWSPAN, 0)
         utils.create_button(self._frame, 'Cancel', self._cancel, self.ROWSPAN, 1)
+        
+        utils.set_menu(self._root, utils.START_MENU)
     
         self.load_schedule()
     

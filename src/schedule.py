@@ -38,16 +38,21 @@ class Schedule:
             courses_dict.update(c.get_dict())
         return {'name': self.name, 'units': self.units, 'gpa': self.gpa, 'projected_gpa': self.projected_gpa, 'courses': courses_dict}
     
+    
     def calculate_projected_gpa(self) -> None:
         """calculates the projected gpa based on the schedule's courses"""
-        
-        def convert_grade_to_gpa(grade: str) -> None:
-            return {'A': 4, 'A-': 3.7, 'B+': 3.3, 'B': 3, 'B-': 2.7, 'C+': 2.3, 'C': 2, 'C-': 1.7, 'D+': 1.3, 'D': 1, 'F': 0}[grade]
-            
-        course_gpa = sum({convert_grade_to_gpa(course.grade) for course in self.courses})/len(self)
+        course_gpa = sum({self.convert_grade_to_gpa(course.grade) for course in self.courses})/len(self)
         course_units = sum({course.units for course in self.courses})
         total_units = self.units + course_units
         self.projected_gpa = self.gpa * (self.units / total_units) + course_gpa * (course_units / total_units)
+        
+    def update_gpa_and_units(self, units: int, grade: str) -> None:
+        total_units = self.units + units
+        self.gpa = self.gpa * (self.units / total_units) + self.convert_grade_to_gpa(grade) * (units / total_units)
+        self.units += units
+        
+    def convert_grade_to_gpa(self, grade: str) -> None:
+        return {'A': 4, 'A-': 3.7, 'B+': 3.3, 'B': 3, 'B-': 2.7, 'C+': 2.3, 'C': 2, 'C-': 1.7, 'D+': 1.3, 'D': 1, 'F': 0}[grade]
         
  
 def open_schedule(root, root_frame, open_file, start_page) -> None:
@@ -63,9 +68,11 @@ def get_schedule_dict(open_file) -> dict:
     open_file.close()
     return s
         
-def save_schedule(schedule: Schedule) -> None:
+def save_schedule(schedule: Schedule, name = None) -> None:
     """saves the schedule as a json file"""
-    file = open(pathlib.Path(f'schedules/{schedule.name}.json'), 'w')
+    if name is None:
+        name = schedule.name
+    file = open(pathlib.Path(f'schedules/{name}.json'), 'w')
     with file as f:
         json.dump(schedule.get_dict(), f)
     file.close()
@@ -82,29 +89,41 @@ class TkSchedule:
         self._root_frame = root_frame
         self._schedule = schedule
         self._start_page = start_page
+        self._mode = 0
         
         # initialize the new menu bar
-        self._menu = tk.Menu(self._root)
-        file_menu = tk.Menu(self._menu, tearoff = 0)
-        file_menu.add_command(label = 'New Schedule', accelerator = 'Ctrl+N', command = self._new_schedule)
-        file_menu.add_command(label = 'Open Schedule', accelerator = 'Ctrl+O', command = self._open_schedule)
-        file_menu.add_command(label = 'Open Most Recent', accelerator = 'Ctrl+R', command = self._open_recent)
-        file_menu.add_command(label = 'Save Schedule', accelerator = 'Ctrl+S', command = self._save )
-        file_menu.add_command(label = 'Quit', accelerator = 'Ctrl+Q', command = self._quit)
-        self._menu.add_cascade(label = 'File', menu = file_menu)
-        
-        edit_menu = tk.Menu(self._menu, tearoff = 0)
-        edit_menu.add_command(label = 'Edit Schedule', accelerator = 'Ctrl+E', command = self._edit)
-        self._menu.add_cascade(label = 'Edit', menu = edit_menu)
-        self._root.config(menu = self._menu)
+        if utils.SCHEDULE_MENU is None:
+            self._menu = tk.Menu(self._root)
+            file_menu = tk.Menu(self._menu, tearoff = 0)
+            file_menu.add_command(label = 'New Schedule', accelerator = 'Ctrl+N', command = self._new_schedule)
+            file_menu.add_command(label = 'Open Schedule', accelerator = 'Ctrl+O', command = self._open_schedule)
+            file_menu.add_command(label = 'Open Most Recent', accelerator = 'Ctrl+R', command = self._open_recent)
+            file_menu.add_command(label = 'Save Schedule', accelerator = 'Ctrl+S', command = self._save )
+            file_menu.add_command(label = 'Quit', accelerator = 'Ctrl+Q', command = self._quit)
+            self._menu.add_cascade(label = 'File', menu = file_menu)
+            
+            edit_menu = tk.Menu(self._menu, tearoff = 0)
+            edit_menu.add_command(label = 'Edit Schedule', accelerator = 'Ctrl+E', command = self._edit)
+            self._menu.add_cascade(label = 'Edit', menu = edit_menu)
+            
+            mode_menu = tk.Menu(self._menu, tearoff = 0)
+            mode_menu.add_command(label = 'Normal', command = lambda: self._switch_mode(0))
+            mode_menu.add_command(label = 'Experimental', command = lambda: self._switch_mode(1))
+            mode_menu.add_command(label = 'What is Mode?', command = lambda: tkmsg.showinfo('Help', 'Changing modes allows you to easily calculate grades without permanently making changes to your schedule.\n\nIn Normal Mode any changes you make will be saved when saving the schedule.\n\nIn Experimental Mode any changes you make will be discarded when saving or when switching back to Normal Mode.'))
+            self._menu.add_cascade(label = 'Mode', menu = mode_menu)
+            
+            utils.SCHEDULE_MENU = self._menu
+        utils.set_menu(self._root, utils.SCHEDULE_MENU)
         
         # bind accelerators (same options as menu bar)
         self._root.bind('<Control-n>', self._new_schedule)
         self._root.bind('<Control-o>', self._open_schedule)
         self._root.bind('<Control-r>', self._open_recent)
+        self._root.bind('<Control-q>', self._quit)
+        
         self._root.bind('<Control-s>', self._save)
         self._root.bind('<Control-e>', self._edit)
-        self._root.bind('<Control-q>', self._quit)
+        
         
         # initialize status bar (top)
         self._frame = tk.Frame(self._root_frame)
@@ -125,7 +144,7 @@ class TkSchedule:
         self._enrolled_units.grid(row = 0, column = 2)
         self._total_courses = tk.Label(self._status_frame, bg = self._status_color, text = f'Total Courses: {len(self._schedule)}')
         self._total_courses.grid(row = 0, column = 3)
-        self._gpa = tk.Label(self._status_frame, bg = self._status_color, text = f'GPA: {self._schedule.gpa}')
+        self._gpa = tk.Label(self._status_frame, bg = self._status_color, text = f'GPA: {round(self._schedule.gpa, 2)}')
         self._gpa.grid(row = 0, column = 4)
         self._gpa_projected = tk.Label(self._status_frame, bg = self._status_color, text = f'Projected GPA: {round(self._schedule.projected_gpa, 2)}')
         self._gpa_projected.grid(row = 0, column = 5)
@@ -150,11 +169,19 @@ class TkSchedule:
         utils.configure_frame(self._courses_frame, colspan = 1)
         
         # other
-        ttk.Button(self._frame, text = 'Add Course', command = self._create_tkcourse).grid(row = 3, column = 0, columnspan = 4, sticky = tk.NSEW, padx = 5, pady = 5)
+        ttk.Button(self._frame, text = 'Add Course', command = self._create_tkcourse).grid(row = 3, column = 0, columnspan = 4, sticky = tk.NSEW, padx = 5, pady = 0)
+        
+        bottom_bar = tk.Frame(self._frame)
+        bottom_bar.grid(row = 4, column = 1, sticky = tk.NSEW)
+        self._mode_label = utils.create_label(bottom_bar, 'Mode: Normal', padx = 0, pady = 0)
+        
         self._root_tracker = root_tracker.Root_Tracker()
         self._root_tracker.add_root(self._root)
         self._total_rows = 0
         self._init_courses()
+        
+        self._temp_file = None
+        
         self.load_tkschedule()
         
     # SCHEDULE METHODS
@@ -176,8 +203,9 @@ class TkSchedule:
         if self._check_for_changes():
             func()
         else:
-            if tkmsg.askyesno('Warning', 'You have unsaved changes, would you like to proceed?'):
+            if tkmsg.askyesno('Warning', 'You have unsaved changes, would you like to proceed?\nAny changes made will not be saved.'):
                 func()
+                
     def _save(self, event = None) -> None:
         save_schedule(self._schedule)
         
@@ -195,6 +223,25 @@ class TkSchedule:
                 self._destroy()
         else:
             self._destroy()
+            
+    def _switch_mode(self, mode: int, event = None) -> None:
+        if mode == 0 and self._mode != 0:
+            open_schedule(self._root, self._root_frame, open(pathlib.Path(f'schedules/{self._schedule.name}-temp.json')), self._start_page)
+            #pathlib.Path(f'schedules/{self._schedule.name}-temp.json').unlink()
+            
+        elif mode == 1 and self._mode != 1:
+            self._mode = 1
+            self._mode_label['text'] = 'Mode: Experimental'
+            self._temp_file = open(pathlib.Path(f'schedules/{self._schedule.name}-temp.json'), 'w')
+            save_schedule(self._schedule, f'{self._schedule.name}-temp')
+            
+            
+            
+    def update_info_bar(self) -> None:
+        self._gpa['text'] =  f'GPA: {round(self._schedule.gpa, 2)}'
+        self._total_units['text'] = f'Total Units Completed: {self._schedule.units}'
+        self._enrolled_units['text'] = f'Units Enrolled In: {sum([c.units for c in self._schedule.courses])}'
+        self._total_courses['text'] = f'Total Courses: {len(self._schedule)}'
             
     def update_projected_gpa(self) -> None:
         """calculates and then displays the projected gpa"""

@@ -196,7 +196,7 @@ class TkCourse:
                 tkmsg.showerror('Warning', '"Units" entry must be an integer.')
             else:
                 # check that all grades are valid
-                for i in range(10):
+                for i in range(9):
                     try:
                         if float(self._grades_values[i].get()) <= float(self._grades_values[i + 1].get()):
                             tkmsg.showerror('Warning', f'A grade of {self._grades[i + 1]} must be less than a grade of {self._grades[i]}')

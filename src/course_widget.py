@@ -43,10 +43,12 @@ class Course_Widget:
     
         # initializes the options frame
         options_frame = utils.create_labelframe(self._course_frame, 'Options', 0, 0)
-        utils.configure_frame(options_frame, colspan = 3)
-        utils.create_button(options_frame, 'Add Assignment', lambda: self._create_assignment(), 0, 0)
-        utils.create_button(options_frame, 'Edit Course', lambda: self._edit_course(), 0, 1)
-        utils.create_button(options_frame, 'Remove Course', lambda: self._remove_tkcourse(), 0, 2)
+        utils.configure_frame(options_frame, colspan = 4)
+        utils.create_button(options_frame, 'Add Assignment', self._create_assignment, 0, 0)
+        utils.create_button(options_frame, 'Edit Course', self._edit_course, 0, 1)
+        utils.create_button(options_frame, 'Submit Course', self._submit_course, 0, 2)
+        utils.create_button(options_frame, 'Remove Course', self._remove_tkcourse, 0, 3)
+        
 
         # initializes the assignments frame
         self._assignments_frame = utils.create_labelframe(self._course_frame, 'Assignments', 1, 0)
@@ -74,11 +76,24 @@ class Course_Widget:
         """opens the edit course dialog"""
         course.EditTkCourse(self._schedule, self._root_tracker, self._c, self, self._tkschedule)
         
+    def _submit_course(self) -> None:
+        """submits the course to the schedule"""
+        if tkmsg.askyesno('Warning', f'When you submit a course it will be added to your official GPA and be removed from the schedule.\nAre you sure you want to submit {self._c.name}?'):
+            self._delete_course()
+            self._schedule.update_gpa_and_units(self._c.units, self._c.grade)
+            self._schedule.calculate_projected_gpa()
+            self._tkschedule.update_projected_gpa()
+            self._tkschedule.update_info_bar()
+    
     def _remove_tkcourse(self) -> None:
         """Confirms that the user wants to remove the course, then removes it"""
         if tkmsg.askyesno('Warning', f'Are you sure you want to completely remove {self._c.name} and its assignments?'):
-            self._schedule.remove_course(self._c)
-            self.destroy()
+            self._delete_course()
+            
+    def _delete_course(self) -> None:
+        """deletes the course from the schedule"""
+        self._schedule.remove_course(self._c)
+        self.destroy()
             
     def _course_menu(self, icon) -> None:
         """updates the drop-down arrow and displays/hides a course's assignments"""

@@ -10,7 +10,11 @@ OFF_WHITE = '#bdc3c7'
 FONT = ('Segoe UI', 10)
 FONT_BIG = ('Segoe UI', 14, 'bold')
 
+START_MENU = None
+SCHEDULE_MENU = None
 
+def set_menu(root, menu):
+    root.config(menu = menu)
 
 def create_label(frame, text, row = 0, column = 0, colspan = 1, padx = 5, pady = 5, sticky = tk.NSEW, relief = tk.FLAT):
     lab = tk.Label(frame, text = text, relief = relief, font = FONT)

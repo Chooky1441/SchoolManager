@@ -21,15 +21,17 @@ class StartingPage:
         self._root.bind('<Control-o>', self.open_schedule)
         self._root.bind('<Control-r>', self.open_recent)
         
+        if utils.START_MENU is None:
+            self._menu = tk.Menu(self._root)
+            file_menu = tk.Menu(self._menu, tearoff = 0)
+            file_menu.add_command(label = 'New Schedule', accelerator = 'Ctrl+N', command = self.new_schedule)
+            file_menu.add_command(label = 'Open Schedule', accelerator = 'Ctrl+O', command = self.open_schedule)
+            file_menu.add_command(label = 'Open Most Recent', accelerator = 'Ctrl+R', command = self.open_recent)
+            file_menu.add_command(label = 'Quit', accelerator = 'Ctrl+Q', command = lambda: self._root.destroy())
+            self._menu.add_cascade(label = 'File', menu = file_menu)
+            utils.START_MENU = self._menu
         
-        self._menu = tk.Menu(self._root)
-        file_menu = tk.Menu(self._menu, tearoff = 0)
-        file_menu.add_command(label = 'New Schedule', accelerator = 'Ctrl+N', command = self.new_schedule)
-        file_menu.add_command(label = 'Open Schedule', accelerator = 'Ctrl+O', command = self.open_schedule)
-        file_menu.add_command(label = 'Open Most Recent', accelerator = 'Ctrl+R', command = self.open_recent)
-        file_menu.add_command(label = 'Quit', accelerator = 'Ctrl+Q', command = lambda: self._root.destroy())
-        self._menu.add_cascade(label = 'File', menu = file_menu)
-        self._root.config(menu = self._menu)
+        utils.set_menu(self._root, utils.START_MENU)
         
         utils.create_title(self._frame, 'School Manager', 3)
         ttk.Button(self._frame, text = 'Create New Schedule', command = self.new_schedule).grid(row = 2, column = 0, padx = 10, sticky = tk.E)
